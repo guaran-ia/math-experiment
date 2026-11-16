@@ -127,6 +127,10 @@ def equivalent(expected: Any, actual: Any, tolerance: Decimal = Decimal("0.0001"
     if isinstance(expected, str) and isinstance(actual, str):
         a, b = _sympy_expr(expected), _sympy_expr(actual)
         if a is not None and b is not None:
+            if isinstance(a, sp.Tuple) or isinstance(b, sp.Tuple):
+                if not isinstance(a, sp.Tuple) or not isinstance(b, sp.Tuple) or len(a) != len(b):
+                    return False
+                return all(sp.simplify(left - right) == 0 for left, right in zip(a, b))
             return sp.simplify(a - b) == 0
         return re.sub(r"\s+", "", expected).casefold() == re.sub(r"\s+", "", actual).casefold()
     return expected == actual

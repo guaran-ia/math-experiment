@@ -76,6 +76,68 @@ The primary outcome is exact/correct answer accuracy from `final_answer.value`. 
 
 Reports provide accuracy by dataset, language, model, and prompt condition with 95% Wilson intervals. Paired Spanish–Guarani comparisons match the same problem, model, and prompt and use exact two-sided McNemar tests. Prompt comparisons pair each condition against `standard` on the same problem, model, and language. Holm adjustment controls family-wise error within each report comparison family. Prompt-by-dataset findings are exploratory because each dataset has only 10–20 items; confidence intervals and p-values do not remove that limitation.
 
+## Results
+
+This snapshot combines the Azure model results in [`results/run_20261112T201956910360Z.jsonl`](results/run_20261112T201956910360Z.jsonl) with the Gemini rerun in [`results/run_20261113T215959373756Z.jsonl`](results/run_20261113T215959373756Z.jsonl). Gemini returned responses for all 560 requests; one Mistral request failed with HTTP 500. Overall, 1,849 of 2,800 planned requests were scored correct (66.0%) when that failed request is counted as incorrect. Model, language, dataset, and prompt accuracy below uses successful API responses only (2,799 responses). Accuracy was evaluated with SymPy 1.14.0; the evaluator compares coordinate tuples such as `(0, 0)` safely, without changing the source JSONL files.
+
+### Accuracy by model and language
+
+| Model | Guarani accuracy | Spanish accuracy | General accuracy |
+|---|---:|---:|---:|
+| Gemini 3.5 Flash | 254/280 (90.7%) | 270/280 (96.4%) | 524/560 (93.6%) |
+| GPT-4o mini | 89/280 (31.8%) | 234/280 (83.6%) | 323/560 (57.7%) |
+| Grok 4.1 | 89/280 (31.8%) | 254/280 (90.7%) | 343/560 (61.3%) |
+| Llama 3.3 70B | 52/280 (18.6%) | 239/280 (85.4%) | 291/560 (52.0%) |
+| Mistral Large 3 | 116/279 (41.6%) | 252/280 (90.0%) | 368/559 (65.8%) |
+
+**Note.** Accuracy is the number of correct answers divided by the number of successful API responses. A successful response means the provider returned a model response, whether or not the answer was correct or parseable as JSON. Provider request failures are excluded from these accuracy denominators. Across successful responses, Guarani accuracy was 600/1,399 (42.9%) and Spanish accuracy was 1,249/1,400 (89.2%).
+
+Gemini 3.5 Flash had the highest overall accuracy (93.6%) and the highest Guarani accuracy (90.7%). Across the other four models, Spanish accuracy ranged from 83.6% to 90.7%, while Guarani accuracy ranged from 18.6% to 41.6%, showing a much wider spread in Guarani performance.
+
+| Dataset | Guarani accuracy | Spanish accuracy |
+|---|---:|---:|
+| `elementary` | 137/350 (39.1%) | 344/350 (98.3%) |
+| `jr_highschool` | 175/350 (50.0%) | 221/350 (63.1%) |
+| `k3_elementary` | 288/699 (41.2%) | 684/700 (97.7%) |
+
+Guarani accuracy remains higher on `jr_highschool` than on `elementary`. This should not be read as evidence that the models solve harder mathematics better. The sets may differ in more than grade level: `jr_highschool` includes several direct, formula-based problems, such as circle equations, while `elementary` includes multi-step word problems whose Guarani phrasing may be awkward or ambiguous. For example, some questions use unusual phrasing for quantities or relationships, which could make them harder to interpret even when the underlying arithmetic is elementary.
+
+With only ten problems in each dataset, this grade-level comparison is exploratory. The items' difficulty and translation quality should be reviewed before drawing conclusions.
+
+### Accuracy by model and dataset
+
+Each dataset is split by language; cells show correct answers / successful API responses and accuracy.
+
+| Model | Elementary, Spanish | Elementary, Guarani | Junior high, Spanish | Junior high, Guarani | K–3, Spanish | K–3, Guarani |
+|---|---:|---:|---:|---:|---:|---:|
+| Gemini 3.5 Flash | 70/70 (100.0%) | 60/70 (85.7%) | 62/70 (88.6%) | 57/70 (81.4%) | 138/140 (98.6%) | 137/140 (97.9%) |
+| GPT-4o mini | 69/70 (98.6%) | 16/70 (22.9%) | 27/70 (38.6%) | 31/70 (44.3%) | 138/140 (98.6%) | 42/140 (30.0%) |
+| Grok 4.1 | 67/70 (95.7%) | 16/70 (22.9%) | 47/70 (67.1%) | 37/70 (52.9%) | 140/140 (100.0%) | 36/140 (25.7%) |
+| Llama 3.3 70B | 68/70 (97.1%) | 14/70 (20.0%) | 41/70 (58.6%) | 16/70 (22.9%) | 130/140 (92.9%) | 22/140 (15.7%) |
+| Mistral Large 3 | 70/70 (100.0%) | 31/70 (44.3%) | 44/70 (62.9%) | 34/70 (48.6%) | 138/140 (98.6%) | 51/139 (36.7%) |
+
+Gemini had the highest Guarani accuracy in each dataset. Spanish accuracy was near ceiling for most models on the elementary and K–3 sets, while results on the junior-high set were lower and more variable across models and languages.
+
+### Prompt conditions
+
+Each cell shows correct answers / successful API responses and accuracy. The single failed Mistral request was for `k3_elementary`, Guarani, under `cross_language_pivot`, so that cell has one fewer response.
+
+| Prompt condition | Elementary, Spanish | Elementary, Guarani | Junior high, Spanish | Junior high, Guarani | K–3, Spanish | K–3, Guarani |
+|---|---:|---:|---:|---:|---:|---:|
+| `minimal` | 50/50 (100.0%) | 17/50 (34.0%) | 34/50 (68.0%) | 24/50 (48.0%) | 99/100 (99.0%) | 43/100 (43.0%) |
+| `standard` | 50/50 (100.0%) | 18/50 (36.0%) | 30/50 (60.0%) | 18/50 (36.0%) | 99/100 (99.0%) | 36/100 (36.0%) |
+| `cross_language_pivot` | 49/50 (98.0%) | 18/50 (36.0%) | 30/50 (60.0%) | 24/50 (48.0%) | 99/100 (99.0%) | 38/99 (38.4%) |
+| `semantic_interpretation` | 49/50 (98.0%) | 19/50 (38.0%) | 32/50 (64.0%) | 28/50 (56.0%) | 95/100 (95.0%) | 37/100 (37.0%) |
+| `vocabulary_aid` | 48/50 (96.0%) | 25/50 (50.0%) | 31/50 (62.0%) | 23/50 (46.0%) | 97/100 (97.0%) | 42/100 (42.0%) |
+| `few_shot` | 49/50 (98.0%) | 23/50 (46.0%) | 28/50 (56.0%) | 30/50 (60.0%) | 95/100 (95.0%) | 51/100 (51.0%) |
+| `reasoning_type` | 49/50 (98.0%) | 17/50 (34.0%) | 36/50 (72.0%) | 28/50 (56.0%) | 100/100 (100.0%) | 41/100 (41.0%) |
+
+Spanish accuracy remained high for elementary and K–3 across prompt conditions, while Guarani accuracy varied more. Few-shot examples had the highest Guarani accuracy on K–3 (51.0%), and the vocabulary aid condition was highest on elementary Guarani (50.0%); no single condition led across datasets and languages.
+
+No prompt condition differed significantly from `standard` after Holm correction across 180 paired comparisons. In paired Spanish–Guarani comparisons, 25 of 105 dataset-by-model-by-prompt tests remained significant after correction; all were in `k3_elementary`. These comparisons should be interpreted cautiously given the small number of problems per dataset.
+
+The output-format check found responses without recoverable JSON for 17 Gemini, 158 Llama, and 40 Mistral answers. The evaluator recovered JSON from many other fenced or prose-wrapped outputs, but these formatting issues should be reported alongside accuracy.
+
 ## Getting started
 
 ### 1. Set up Python

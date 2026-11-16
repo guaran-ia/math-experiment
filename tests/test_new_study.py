@@ -63,6 +63,8 @@ class NewStudyTests(unittest.TestCase):
     def test_numeric_structured_and_symbolic_evaluation(self):
         self.assertTrue(evaluate({"expected_answer":1.5,"response":{"final_answer":{"value":"1.50001"}}})["correct"])
         self.assertTrue(evaluate({"expected_answer":[[1,2],[3,4]],"response":{"final_answer":{"value":[[1,2],[3,4]]}}})["correct"])
+        self.assertTrue(evaluate({"expected_answer":"(0, 0)","response":{"final_answer":{"value":"(0,0)"}}})["correct"])
+        self.assertFalse(evaluate({"expected_answer":"(0, 0)","response":{"final_answer":{"value":"(0,1)"}}})["correct"])
         if evaluator.sp is None: self.skipTest("SymPy is installed from requirements.txt; it is not installed in this environment.")
         self.assertTrue(evaluate({"expected_answer":"x^2+2*x+1","response":{"final_answer":{"value":"(x+1)^2"}}})["correct"])
         self.assertFalse(evaluate({"expected_answer":9,"response":{"reasoning":"There are 9","final_answer":{"value":8}}})["correct"])
